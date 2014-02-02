@@ -1,0 +1,1280 @@
+面试题精华
+一 C++基础面试题
+1.1  vector，list，deque之间的区别
+答案： vector 数组，内存连续存储。随机访问方便，增加和删除不方便，容量不够的时候需要释放原来的数据，重新分配空间，有代价。
+list，双向链表，不使用连续内存存储。随机访问不方便，增加删除方便。
+deque，综合了vector和list，支持随机访问，可以在头尾分别做元素的插入和删除操作。
+像vector那样“因旧空间不足而重新配置一块更大的空间，然后复制元素，再释放旧空间”这样的事情在deque是不会发生的。
+deque是如何实现的呢？
+
+set和 multiset的区别 
+
+map和multimap的区别
+
+1.2 C++构造函数的初始化顺序
+答案：C++中，成员变量的初始化顺序取决于他们在类中声明的顺序，而与在初始化列表中书写的顺序无关。
+例如：
+template <class T>
+class MyVector
+{
+public:
+    MyVector(unsigned n=8):_size(n),_data(new T[_size]){}
+protected:
+    T*       _data;
+    unsigned _size;
+};
+以上代码初始化的时候会先初始化_data，此时_size还未被初始化，为随机值。
+1.3  back_inserter是什么
+答案：一个用于在容器尾部插入数据的iterator。
+例如：
+
+  //正常初始化vec
+  vector<int> vec;
+   for ( i = 0 ; i < 3 ; ++i )  
+   {
+      vec.push_back ( i );
+   }
+   
+   // Insertions can be done with template function
+   back_insert_iterator<vector<int> > backiter ( vec );
+   
+   //vec的尾部加入30
+   *backiter = 30;
+   backiter++;
+   *backiter = 40;
+
+   // Alternatively, insertions can be done with the back_insert_iterator member function
+   back_inserter ( vec ) = 500;
+   back_inserter ( vec ) = 600;
+
+   cout << "After the insertions, the vector vec is: ( ";
+   for ( vIter = vec.begin ( ) ; vIter != vec.end ( ); vIter++ )
+   	cout << *vIter << " ";
+   cout << ")." << endl;
+
+   After the insertions, the vector vec is: ( 0 1 2 30 40 500 600 ).
+1.4 C++ shared_pointer的用法和实现
+答案：
+用法：智能指针，利用RAII来防止内存泄漏。
+std::tr1::shared_ptr<T> ptr(new T());
+
+实现： 
+1.5 C++ 模板相关学习与总结
+答案：  分为函数模板和类模板
+通常并不会把模板编译成一个可以处理任何类型的单一实体，而是对于实例化模板类型参数的每种类型，都从模板中产生一个不同的实体。
+1.6 C++函数隐藏  派生类中“重载”基类函数
+答案：  
+class A
+{
+    public:
+          void function();
+};
+
+void A::function()
+{
+     cout<<"A function!"<<endl;
+}
+
+class B : public A
+{
+    public:
+         void function(int a, int b);  //基类同名函数，参数不同
+};
+
+void B::function(int a, int b)
+{
+    cout<<"B function!"<<endl;
+}
+
+B b;
+b.function()；//编译出错
+
+函数隐藏：派生类和基类的函数名相同但参数列表不同，如果基类函数无virtual，基类函数将被屏蔽（当派生类的对象访问基类的函数时，会出现编译出错）。虽然函数名相同但参数不同，可视为重载，但函数的重载不适用于这种情况，因为函数的重载必须在同一个作用域中定义，而基类和派生类属于不同的作用域。
+调用基类中同名函数的方法是： b.A::function();
+
+扩展：多重继承情况下的同名函数。多继承下两个以上基类有相同名称的成员函数时，派生类对象引用该名称函数时，若不做任何处理，将不能正常工作（编译出错）。其原因在于，重载规则不适用于跨越多个类的情况。有两种基本的方法：一是使用时明确指出用到哪个基类的同名函数；二是用using声明把不同基类的同名函数引入到一个公共作用域中。
+1.7 C++ static 函数的一些属性
+1）static 和 const 不能同时修饰同一个成员函数。
+const函数，有一个 参数是const this*，static函数没有this指针。所以，const和static不能同时修饰一个函数。
+static的作用是表示该函数只作用在类型的静态变量上，与类的实例没有关系；而const的作用是确保函数不能修改类的实例的状态，与类型的静态变量没有关系。因此不能同时用它们。
+
+2）static成员函数也不能被声明为虚函数。
+虚函数是和对象有关系，通过动态绑定实现多态。static成员函数和对象无关，也就无法声明为虚函数。静态成员函数不受限于某个对象。
+
+3）static成员函数可以直接访问所属类的static成员，但不能直接使用非static成员。
+1.8  C语言中 static 的用法
+1，对于变量
+不管是局部变量，还是全局变量，用static声明之后，都是存储在静态区。未初始化的静态变量自动赋初值为0。
+
+2，对于变量和函数
+c里面的全局变量及函数是默认可以extern的，而用stiac声明过之后，就只有在本文件内可见了。
+
+3，用static 定义函数或全局变量名之后，有以下两个好处：
+a、在本文件内可见，可防止污染变量名，防止与其它文件内变量名冲突。
+b、只有本文件可调用该函数或该变量，本文件之外无法访问。
+1.9 C和C++中const的区别
+C语言中的const是一个只读变量，不可被用作声明数组的大小。
+C++中的const是常量，可被用于声明数组大小。
+1.10  C++ 和 C 的区别
+C++包含了C，对于C语言进行了很多改进。
+namespace解决了C语言函数重名的问题。
+const/inline/template解决了C语言中宏的问题。
+引入引用，解决了很多指针的问题。
+异常使代码的结构更加清晰。
+封装，集成，多态增加了面向对象性。
+函数重载，解决C语言扩展一个函数弄出来的各种ugly的东西。
+智能指针，解决了C语言中的内存泄漏。
+STL提供了一个算法和数据结构的框架。
+1.11  extern的用法
+用法1：声明外部变量
+变量都是文件级可见的，不加extern的话会导致编译错误。
+
+用法2：C++中调用C方式编译的函数
+C++编译器生成的目标文件 和 C编译器生成的目标文件 不一样。
+必须告诉编译器某个函数是用哪种方式编译出来的，所以需要extern。
+1.12 NULL指针调用成员函数的问题
+class A
+{
+public:
+void function(){printf("Hello World");}
+};
+
+A* p1 = NULL;
+p1->function();
+结果正常的输出了： “Hello World”
+
+1 非虚的成员函数是静态绑定的，
+2 非静态成员函数调用时编译器隐式传入this指针的值
+由于function()为非虚拟成员函数，所以是静态绑定，实质是编译器在pa->function();处直接翻译成调用A类中function()的汇编代码（A::function(NULL)）。
+
+这个不是虚函数,函数地址直接编译到这里，所以能调用。
+相当于 int a = A::func1(this)。
+不过传给func1的this指针应该是NULL。
+如果是虚函数,就可能会出错了，因为：等价于，int a = pa-> vtable[0](this)。
+1.13  构造/析构函数和虚函数
+构造函数不能声明为虚函数，因为构造时对象还是未定型的空间。
+析构函数通常声明为虚函数，目的是当通过基类指针删除派生类对象时，派生类的析构函数会被调用。
+
+父类的构造函数中调用了虚函数的话.那么在实例化子类对象时首先应该调用父类的构造方法，这时父类的构造函数中调用的虚函数应该是哪个？ 
+其实这个问题，在语言设计的时候就是个两难的问题。 
+一、如果调用的是父类的函数的话，这个有点违反虚函数的定义。 
+二、如果调用的是子类的函数的话，这可能产生问题的：因为在构造子类对象的时候，首先调用父类的构造函数，而这时候如果去调用子类的函数，由于子类还没有构造完成，子类的成员尚未初始化，这么做显然是不安全的。 
+c++选择了第一种，而Java选择了第二种。 
+
+析构函数中也是一样的，析构的顺序是：先调用派生类的析构，然后父类的析构。父类的析构函数中调用虚函数时，因为子类已被析构，所以会调用父类的虚函数。
+12.虚基类
+    虚基类的定义：在派生类的对象中，同名的虚基类只产生一个虚基类子对象，而某个非虚基类产生各自的子对象。
+    为了解决多重继承二义性的问题，菱形继承的时候，如果没有虚拟继承B中的变量就会在GD中存在2份。
+     
+虚基类是对于派生类来讲的，基类既可以被用作虚基类，也可以被用作普通基类。
+
+采用虚基类的多重继承的构造与析构的次序
+在派生类对象的创建中，构造次序如下：
+1）虚基类的构造函数被调用，并按它们声明的顺序构造；
+2）非虚基类的构造函数按它们声明的顺序调用；
+3）成员对象的构造函数；
+4）派生类自己的构造函数被调用。
+
+虚基类速度的问题：在C++中，obj是一个类的对象，p是指向obj的指针，该类里面有个数据成员mem，请问obj.mem和p->mem在实现和效率上有什么不同。
+答案是：只有一种情况下才有重大差异，该情况必须满足以下3个条件：
+（1）obj 是一个虚拟继承的派生类的对象
+（2）mem是从虚拟基类派生下来的成员
+（3）p是基类类型的指针
+当这种情况下，p->mem会比obj.mem多了两个中间层。（也就是说在这种情况下，p->mem比obj.mem要明显的慢）
+
+
+ 
+1.13. 面向对象的要素和基本原则
+要素：封装，继承，多态
+基本原则：
+       第一、单一职责原则 即 一个类应该只负责单一的职责，而将其余的职责让其他类来承担，这样每个类之间相互协调来完成一件任务。
+      第二、开闭原则 即对扩展是开放的，对修改是封闭的，因此需要注重抽象的运用。
+      第三、替换原则 子类应该可以替换在父类出现的任何地方。 
+      第四、依赖倒置原则 即抽象不能依赖于实现细节，或者说应用不依赖于具体框架。
+      第五、接口分离原则 不要将一大堆方法都糅合在一个接口里面形成一个大而全的接口，要将他们按照职责和功能分离到多个小接口。
+1.14  sizeof (union)和内存对齐相关知识
+      union(共用体)表示几个变量共用一个内存位置，在不同的时间保存不同的数据类型和不同长度的变量。在union中，所有的共用体成员共用一个空间，并且同一时间只能储存其中一个成员变量的值。当一个共用体被声明时, 编译程序自动地产生一个变量, 其长度为联合中最大的变量长度的整数倍。如有数组的话，按照数组中单个元素的长度来计算。
+      实例1：
+union foo{
+　　		int i;
+　　		char c;
+　　		double k;
+　　};
+    sizeof(foo); //double最长占用8字节，所以union foo大小为8字节
+     
+     实例2：
+     union A  
+    {
+           int a[5];       //20
+           short b;     //2
+           double c;    //8
+           char p2;     //1
+    };
+
+   struct B { 
+	int n; // 4字节 
+	A a; // 24字节 
+	char c[10]; // 10字节 
+   };
+   sizeof(A)   24： 8的整数倍，最大值为20，所以为24
+   sizeof(B)   48： 24的整数倍，所以为48
+
+实例3：
+    union f 　　
+{ 　　
+	char s[10]; 　　
+	int i; 　　
+};
+ sizeof(f) 12
+
+内存对齐存在的原因：
+1)当该数据是从0字节开始时，CPU只需读取内存一次即可把这4字节的数据完全读取到寄存器中。
+2)当该数据是从1字节开始时，问题变的有些复杂，此时该int型数据不是位于内存读取边界上，cpu需要多次。
+3)原子操作：如果内存不对齐的话，有可能引发多次内存访问操作，无法保证内存操作的原始性。
+
+sizeof的总结：
+sizeof是运算符不是函数。
+sizeof可以对函数调用求大小，并且求得的大小等于返回类型的大小，但是不执行函数体。
+
+对一个类取sizeof的结果分析：
+
+1.15  C++中的四种类型转换 
+static_cast 
+dynamic_cast 
+const_cast 
+reinterpret_cat
+
+static_cast，不同类型之间的转换，例如：doulbe<->int
+
+dynamic_cast      判断父类子类直接的转换，可能返回null，使用之前需要判断。
+if (T* t = dynamic_cast<T*>(o)) {
+    t->func(); //< Use t here, it is valid
+}
+
+const_cast           强制消除对象的常量性
+
+reinterpret_cast   任意转换 ，最危险
+例如：
+int n=9;
+double d=reinterpret_cast<double > (n);
+
+1.16 指针和数组的区别
+绝大部分情况下两者用法一样，都表示一个地址。区别是指针是个变量，可以赋值，而数组是个常量，不能赋值。在函数中，传入的数组会退化为指针。
+1.17 宏和内联函数的区别
+1) 宏是代码处不加任何验证的简单替代，而内联函数是将代码直接插入调用处，而减少了普通函数调用时的资源消耗。
+2) 宏不是函数，只是在编译前预处理阶段将程序中有关字符串替换成宏体。inline是函数，但在编译中不单独产生代码，而是将有关代码嵌入到调用处。
+
+2. 山寨一个marshall/unmarshall模板，然后分别对vector,list做特化
+
+3. 用pthread_mutex_t和pthread_cond_t写一个多线程使用的队列
+
+4. 有个哈希表需要多线程同时快速插入/删除，怎么设计
+
+5. 使用template实现问题4中的哈希表
+
+6. 写一个内存对齐的malloc函数 void * aligned_malloc(size_t size, int alignment=1)
+
+
+
+给定两个vector<int> v1, v2，如何高效地将v1和v2合并，得到一个排序的vector，去除重复元素？
+如何让Static函数产生类似虚函数的行为？
+如何让Template函数产生类似虚函数的行为？
+Template类型的Specialize方法有哪些？
+
+三，C++的实际应用例子
+我这里一个商业开发，好几年了一直用C++，通讯用asio
+xml用libxml,soap用gsoap,图形渲染用QOpenGL，画报表qwt
+动态脚本python，图形终端qt，多线程用boost::thread，事件机制用
+boost::signals2,数据库用otl,外加自己山寨了一个系统应用库，这些一起用，开发效率是非常的高。
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+二 java基础面试题
+1. JNI的实现方法
+JNI原理：JVM代理，翻译的功能。
+java->JVM->调用动态库
+
+JNI实现的大概步骤
+      java类中声明native函数。
+     编译成class 后用javah生成C/C++用的.h文件。
+     用C/C++实现头文件中的函数，生成动态库。
+2. String 和 StringBuffer的区别
+String每次都是生成一个常量，为不可变对象,一旦被创建，就不能修改它的值。
+对于已经存在的String对象的修改都是重新创建一个新的对象，然后把新的值保存进去。
+String 是final类，即不能被继承。
+ 
+StringBuffer是一个可变对象，当对他进行修改的时候不会像String那样重新建立对象。
+
+看看以下代码：
+将26个英文字母重复加了5000次，
+1	        String tempstr = "abcdefghijklmnopqrstuvwxyz";
+2	        int times = 5000;
+3	        long lstart1 = System.currentTimeMillis();
+4	        String str = "";
+5	        for (int i = 0; i < times; i++) {
+6	            str += tempstr;
+7	        }
+8	        long lend1 = System.currentTimeMillis();
+9	        long time = (lend1 - lstart1);
+10	        System.out.println(time);
+得到的结果每次不一定一样一般为 46687左右，也就是46秒。
+
+我们再看看以下代码
+1	        String tempstr = "abcdefghijklmnopqrstuvwxyz";
+2	        int times = 5000;
+3	        long lstart2 = System.currentTimeMillis();
+4	        StringBuffer sb = new StringBuffer();
+5	        for (int i = 0; i < times; i++) {
+6	            sb.append(tempstr);
+7	        }
+8	        long lend2 = System.currentTimeMillis();
+9	        long time2 = (lend2 - lstart2);
+10	        System.out.println(time2);
+得到的结果为 16 ，有时还是 0，StringBuffer 的速度几乎是String 上万倍。
+结论：频繁对一个字符串进行修改连接操作的时候，请使用StringBuffer。
+
+同时，String作为函数的参数，即便在函数中修改了String的值，函数返回之后String的值仍然是原来的值。StringBuffer可得到修改之后的值。
+原因：String是char[]的包装类，包装类的特质之一就是在对其值进行操作时会体现出其对应的基本类型的性质。
+
+3. InputStream 和 InputStreamReader 的区别
+InputStream 被用来读入二进制数据（byte数组），非文本。
+InputStreamReader被用来读入字符数据（char数组 或 string）。
+
+4. 值对象和引用对象的区别
+值对象分配在栈上，可直接使用。
+引用对象分配在堆上，拿到的是一个地址，需要多一次转换。
+5. ArrayList、Vector、LinkedList的区别及其优缺点
+底层实现： ArrayList和Vector都是使用数组形式实现的，访问快，但增加删除比较慢。LinkedList是基于链表的实现方式，随机访问慢，但是增加删除比较快。
+同步性：Vector和ArrayList的最大区别在于，Vector是线程安全的，ArrayList不是。
+6. HashMap 和 HashTable的区别及其优缺点
+HashMap是新框架中用来代替HashTable的类。
+区别1：HashTable的方法是同步的，HashMap未经同步，所以在多线程场合要手动同步HashMap，这个区别就像Vector和ArrayList一样。
+区别2：HashTable不允许null值(key和value都不可以)，HashMap允许null值(key和value都可以，只容许有一个null值的key，可以有多个null值的value)。
+7. Java反射机制的理解及其用途
+反射机制允许程序在运行时取得任何一个已知名称的class的内部信息，包括其modifiers（诸如public, static 等等）、superclass（例如Object）、实现之interfaces（例如Cloneable），也包括fields和methods的所有信息，并可于运行时改变fields内容或调用methods。
+用途：程序运行中根据配置文件来创建对象。
+
+8. Java和C++的区别
+Java主要在以下方面对C++进行了改进
+1，Java彻底删除了指针，用引用来替代
+2，Java用GC彻底的解决了C++的各种内存问题
+3，Java比较彻底的解决了C++的跨平台问题
+4，Java提供了很多好的类库，UI，线程等。
+5，Java完全抛弃了面向过程的编程方式，废弃了多重继承。
+
+多重继承存在二义性问题，例如同名函数和变量。
+使用Interface完全可以实现多重继承，同时还能解决多重继承的各种问题。接口不能有实例变量，只能有静态的常量，不能有具体的方法，只能有抽象方法，因此也就摒弃了多继承的缺点。
+6，Java的反射机制使Java更动态，在这个上面可以构建各种高级用法。
+Java线程，socket，反射，动态代理，虚拟机，AOP,GC的策略
+
+9. Java中的final，finally，finalize
+final：修饰符（关键字）如果一个类被声明为final，意味着它不能再派生出新的子类，不能作为父类被继承。因此一个类不能既被声明为abstract的，又被声明为final的。将变量或方法声明为final，可以保证它们在使用中不被改变。被声明为final的变量必须在声明时给定初值，而在以后的引用中只能读取，不可修改。被声明为final的方法也同样只能使用，不能重载。
+
+finally：再异常处理时提供 finally 块来执行任何清除操作。如果抛出一个异常，那么相匹配的 catch 子句就会执行，然后控制就会进入 finally 块。
+
+finalize：方法名。Java 技术允许使用 finalize方法在垃圾收集器将对象从内存中清除出去之前做必要的清理工作。这个方法是由垃圾收集器在确定这个对象没有被引用时对这个对象调用的。它是在 Object 类中定义的，因此所有的类都继承了它。子类覆盖 finalize方法以整理系统资源或者执行其他清理工作。finalize方法是在垃圾收集器删除对象之前对这个对象调用的。
+
+
+三  Linux基础知识
+3.1 常用命令
+3.1.1 查看Linux是32位的还是64位的
+getconf WORD_BIT
+3.1.2  对一组查询记录进行排序，并按出现次数进行统计
+cut -f3 unhit_data | sort | uniq -c | sort -nr > sorted_unhit_data
+3.2 shell编程
+3.2.1 grep相关
+grep进行查找的时候进行精确匹配。
+tcsh： grep /</boot/>
+
+grep进行或查询
+grep –E “robot | Robot” startVC.sh
+
+查找当天日志的方法，
+grep “`date +"%b %e"`” /var/log/messages
+
+find配合grep查询源代码中的内容，
+find ./ -name "*.c" -exec grep -H -n "nanosleep" {} \;
+
+-H, --with-filename
+各々のマッチに対してファイル名を表示します。
+grep 忽略大小写的选项,-i
+3.2.2 find相关
+找到当天修改过的文件
+ find /var/log/ -type f –mtime –1 –print
+
+查找文件的时候跳过不想查找的目录（/home_local /usr /home）
+find / \( -path "/home_local" -o -path "/usr" -o -path "/home" \) -a
+ -prune -o -name "*.txt" –print
+
+2.3 查找cpp或者c文件
+find / \( -name “*.cpp” –o “*.c” \) -print 
+
+2.4 利用正则表达式查询
+find /tmp –regex “/tmp/a*”
+-name 最大的区别就在于 -regex是把find输出的整个结果(有别于绝对路径名)作为要匹配的对象, 而不仅仅是结果的最后一部分, 举例：/tmp，目录下有且仅有 aaa, aa, 1, 2 这些文件。
+find /tmp -name "a*"可以找到：aaa和aa
+而find /tmp -regex "a*"就不行, 它一个都找不到, 因为找到的每个结果是这样的：
+/tmp/aaa
+/tmp/aa
+-name 是对结果中的"aaa"和"aa"这个部分进行匹配, 而-regex却是对完整的
+"/tmp/aaa"和"/tmp/aa"进行匹配.
+所以你要写作
+find /tmp -regex ".*/a*"
+
+2.5 find xargs
+find命令把匹配到的文件传递给xargs命令，而xargs命令每次只获取一部分文件而不是全部，不像-exec选项那样。这样它可以先处理最先获取的一部分文件，然后是下一批，并如此继续下去。
+find ./ptopa –name  "lua_error_log.txt" | xargs ls -lh
+3. Shell编程
+3.1 测试字符串
+	-z 空串
+	-n 非空串
+
+3.2. 删除两个日期之间的所有目录
+for i in `ls -d 200*`;
+do 
+if [ "$i" -ge 20090119 -a "$i" -le 20090203 ];then 
+rm -rf $i ; 
+fi ; 
+done
+
+3.3 while读文件
+while read LINE
+do
+	echo $LINE
+done < names.txt
+
+巧妙利用IFS读文件，
+SAVEDIFS=$IFS
+IFS=:
+while read NAME DEPT ID
+do
+	echo –e “$NAME\t $DEPT\t $ID”
+done < names.txt
+IFS=$SAVEDIFS
+
+Shell版的冒泡排序
+#!/bin/bash
+A=( 333333 44444444 55555555 0 2 3 1 19 20 1000 111111111111)
+A_length=${#A[@]}   //数组长度
+i=0
+A_length1=`expr $A_length - 1`
+while [ "$i" -lt "$A_length1" ]
+do
+        j=`expr $i + 1`
+        while [ "$j" -lt "$A_length" ]
+        do
+                if [ "${A[$i]}" -ge "${A[$j]}" ]; then
+                        temp=${A[$i]}
+                        A[$i]=${A[$j]}
+                        A[$j]=$temp
+                fi
+                let j++
+        done
+        let i++;
+done
+
+for ll in ${A[*]}
+do
+        echo "$ll"
+done
+
+3.2.1 遍历一个目录中的所有文件
+#!/bin/bash
+function listfiles(){
+        for file in `ls $1`
+        do
+                if [ -d $1"/"$file ]
+                then
+                        listfiles $1"/"$file
+                else
+                        echo $1"/"$file >> b
+                fi
+        done
+}
+
+
+3.5　
+
+３.	date相关
+date "+%Y%m%d%H%M%S"
+修改日期而不改变时间：
+date -s "2009-02-04 `date +%T`”
+
+Linux设置时间的方法：
+设置时间为下午14点36分。
+  # date -s 14:36:00
+　Fri Nov 26 14：15：00 CST 1999
+设置时间为1999年11月28号。
+ # date -s 991128
+　Sun Nov 28 00：00：00 CST 1999
+
+把date +%s获得的时间戳变成具体时间的方法，
+awk 'BEGIN{print strftime("%Y-%m-%d %H:%M:%S","1243403940")}'
+2009-05-27 14:59:00
+
+5. dirname 
+dirname /usr/bin/sort  Output： "/usr/bin".
+
+6．tar tvf test.tar
+显示压缩包中的文件列表。
+解压：x
+压缩：c
+针对gz：z
+针对bz2：j
+用于显示：v
+
+
+9.按文件大小排序
+ls –al | sort –n –k 5
+
+10.sed相关
+-n 只打印匹配到的行，不打印多余的行。同p配合使用。
+-i 没有任何输出，直接改变文件的内容 
+-e 同时多个替换，例如：sed –e ‘s/MA/, Massachusetts/’ –e ‘s/ PA/, Pennsylvania’ list 
+
+①抽取一行中的一部分内容 
+/bin/sed –n ‘/<VCA>/,/<\/VCA>/p’ ROBOTCONF | /bin/sed –n ‘s/*.<VCA>\(.*\)<\/VCA>.*/\1/p’
+(.*)用\1来表示。如果有第二个，(.*)用\2来表示。
+②sed的匹配功能
+精确匹配：
+sed ‘/\<test1\>d’name.txt
+两个条件的或匹配：
+echo "bbbbdfddfaaaa" | sed -n '/.*bbbb\|bbbbb.*aaaa/p'
+  
+③sed的替换功能
+$ sed -e 's/foo/bar/' myfile.txt 
+替换myfile.txt中的第一个foo
+ sed -e 's/foo/bar/g' myfile.txt 
+替换myfile.txt中的所有foo
+$ sed -e '1,10s/enchantment/entrapment/g' myfile.txt 
+上例将导致用短语 'entrapment' 替换所有出现的短语 'enchantment'，但是只在第一到第十行（包括这两行）上这样做。
+
+$ sed -e '/^$/,/^END/s/hills/mountains/g' myfile3.txt 
+该例将用 'mountains' 替换 'hills'，但是，只从空行开始，到以三个字符 'END' 开始的行结束（包括这两行）的文本块上这样做。
+
+$ sed -e 's/.*/ralph said: &/' origmsg.txt
+sed的附加文本功能，用&来替代，.*匹配的部分，这里指的是：任意一行。
+执行之后，在任何一行的前面加上：ralph said。
+
+④添加一行
+sed的添加功能，在指定行前面插入用i，在指定行后面插入用a
+$sed ‘/money/a\and girls.’
+
+⑤sed的范围匹配
+文件内容如下：
+The honeysuckle band played all night long for only $90.
+it was an evening of splendid music and company.
+Itoo bad the disco floor fell through at 23:10.
+The local nurse Miss P.Neave was in attendance.
+The honeysuckle band played all night long for only $90.
+The honeysuckle band played all night long for only $90.
+
+bash-3.2$ sed -n '3,/It/'p file
+Itoo bad the disco floor fell through at 23:10.
+The local nurse Miss P.Neave was in attendance.
+The honeysuckle band played all night long for only $90.
+The honeysuckle band played all night long for only $90.
+
+bash-3.2$ sed -n '2,/It/'p file
+it was an evening of splendid music and company.
+Itoo bad the disco floor fell through at 23:10.
+
+bash-3.2$ sed -n '4,/It/'p file
+The local nurse Miss P.Neave was in attendance.
+The honeysuckle band played all night long for only $90.
+The honeysuckle band played all night long for only $90.
+
+12. 删除一个文件的重复行
+cat file.name | sort | uniq 
+
+14．cp之后不改变文件的属主
+cp –a
+
+16. ubuntu通过apt-get install安装过的软件包，下载到系统的：/var/cache/apt/archives下面了。
+apt-get clean                  清除已下载的软件包
+dpkg -i | --install xxx.deb    安装deb软件包
+dpkg -r | --remove xxx         删除软件包
+
+dpkg –P xxx　　              连同配置文件一起删除
+dpkg -I | -info xxx.deb       查看软件包信息
+dpkg -L xxx                   查看已安装的包的文件详细列表
+apt-cache show xxx 或者dpkg –s xxx  查看已安装的包的详细信息
+dpkg –c xxx.deb              查看一个deb包中所包含的详细文件 
+查找一个文件所属于的软件包，
+dpkg –S filename 或者 apt-file search filename
+
+17. RPM常用参数
+①	显示rpm包的基本信息，rpm -qpi VoiceCAIWAlib-1.0-0.i386.rpm
+②	显示rpm包中文件的详细列表，rpm–qpl VoiceCAIWAlib-1.0-0.i386.rpm
+③	显示已安装过的包的基本信息，rpm -qi gnome-bluetooth
+④	显示已安装过的包中的文件的详细列表，rpm –ql gnome-bluetooth
+
+
+18. 对某个目录下所有内容按照大小进行排序
+du -sh * | awk '{v=substr($1,length($1),1)}v=="G"{$0="1G "$0}v=="M"{$0="2M "$0}v=="
+K"{$0="3K "$0}v=="0"{$0="4Z "$0}1' |sort -k1n -k2nr |awk '{print substr($0,4)}'
+
+
+19. AWK相关编程
+①apache_log文件格式：
+115.31.12.33 [01/Mar/2000:01:38:16+0800] "GET/search?q=24/Mar/2009 HTTP/1.1" 200 10623
+115.31.12.33 [23/Mar/2009:14:38:16+0800] "GET/search?q=24/Mar/2009 HTTP/1.1" 200 10623
+115.31.12.33 [23/Mar/2009:14:38:16+0800] "GET/search?q=24/Mar/2009 HTTP/1.1" 200 10623
+统计每天日志数量的命令：
+awk '{v=substr($2,2,11)}/GET\/search/{a[v]++} END{for (i in a) print i,a[i]}' apache_log|sort
+
+②匹配仅有四个字母的行，
+awk '$1~/^[a-zA-Z][a-zA-Z][a-zA-Z][a-zA-Z]$/{print $1}' file
+
+③作些系统清理工作，要找出存在于组/etc/group 的用户帐号，但是不存在/etc/passwd里
+完成功能的脚本：
+awk -F"[:,]" 'NR==FNR{for(i=4;i<=NF;i++)if($i)a[$i]=1} NR>FNR{if(!$5)$5="NULL";b[$1]=$5} END{for(i in a) print i"\t"(b[i]?b[i]:"error")}' /etc/group /etc/passwd
+  基本思路：
+     1.将/etc/group里面的用户取出来，存放在a数组里面。两个分隔符：和，同时使用，可以把/etc/group中的所有用户获取出来。
+     2.awk处理两个文件的时候，NR==FNR的时候，是针对第一个文件。NR>FNR的时候是针对第二个文件处理。
+     3.将/etc/passwd里面的用户取出来，放到b数组里面。
+4.对于a数组里面的各个用户名进行遍历，如果用户名在b数组里面则打印正常，否则打印error。
+ 
+④截取一个文件的x行到y行之间的数据
+awk 'NR>=x&&NR<=y' file
+
+⑤	在awk中使用Shell定义的变量
+words=”Hello”
+echo “Hello world”|| awk '$1=="'$words'" {print $2}'      
+
+20. 删除文件的最后一行
+head -n -1 FILE > FILE.tmp && mv -f FILE.tmp FILE
+
+21．export LANG=jp_JP.eucJP
+
+22. 抽取n个文件的前10行，合并成一个文件
+head –10 -q *.c newfile
+-q, --quiet, --silent
+ファイル名のヘッダを出力しない。
+
+23. 显示汉字的16进制数值的命令 xxd
+echo -n 小さいな声 | xxd –ps
+
+24. uname   -m       （出现i*86就是32位的，出现ia64就是64位的。x86_64 GNU/Linux indicates I have 64bit kernel running. If you use see i386/i486/i586/i686 it is a 32 bit kernel.）
+
+25. top 
+-d 更新延迟时间
+-b 批处理用的选项，使输出更加规整
+-n  刷新次数
+ 
+26. Linux系统的更新
+Fedroa     yum check-update yum update
+Debian/Ubuntu apt-get update
+
+27. col命令
+
+功能说明：过滤控制字符。
+语　　法：col [-bfx][-l<缓冲区列数>]
+
+补充说明：在许多UNIX说明文件里，都有RLF控制字符。当我们运用shell特殊字符">"和">>"，把说明文件的内容输出成纯文本文件时，控制字符会变成乱码，col指令则能有效滤除这些控制字符。
+
+参　　数：
+-b 过滤掉所有的控制字符，包括RLF和HRLF。
+-f 滤除RLF字符，但允许将HRLF字符呈现出来。
+-x 以多个空格字符来表示跳格字符。
+
+
+
+
+3.3 驱动开发&&内核编程
+3.3.1 驱动程序中的上半部和下半部
+中断处理为什么要分上下半部：速度与功能的平衡。中断处理程序是打断了别人的运行，所以要尽可能快地运行完毕。但是又想尽量完成强大的功能。这是两个互相矛盾的目标。解决办法就是把中断处理程序分成以下两部分
+上半部：有严格的时间限制，做一些必须要马上进行的工作，例如对中断的应答和硬件复位。
+下半部：允许稍后完成，做一些不太紧急的工作，如数据的加工。
+这样，中断处理程序处理上半部，下半部再稍后空闲的时候再来执行，就能在速度与功能上达到一个平衡。
+举例：网卡的中断处理
+网卡有数据到达，发一个中断给内核，内核调用中断处理程序处理以下工作：通知硬件、拷贝数据到内存。这些工作都是紧急的，以为网卡的缓存通常比较小，如果不及时拷出，缓存满后将造成丢包。而且必须让网卡复位，立即准备接收新数据。
+而下半部的工作：对内存中数据进行加工，并发送给相应的进程。这是不太紧急的工作，可以稍后进行。
+3.3.2 驱动开发中的并发与互斥
+中断屏蔽，原子操作，自旋锁，和信号量都是linux设备驱动中可采用的互斥途径。
+自旋锁（Spinlock）最多只能被一个可执行线程持有，如果一个执行线程试图请求一个已被争用的自旋锁，那么这个线程就会一直进行忙循环——旋转——等待锁重新可用。要是锁未被争用，请求它的执行线程便能立刻得到它并且继续进行，自旋锁可以在任何时刻防止多于一个的执行线程同时进入临界区，可用于中断处理中。
+Spinlock 只适用于短暂的等待，因为没有进程切换所以对于短暂等待他的效率会比较高。 但是对于长时间等待，由于它的CPU占用是100% 等的越长越不合算。
+Spinlock只能在多个CPU的系统上用，因为等待者占据了100%的CPU，只由另外一个CPU上的进程才能解锁。
+
+Linux中的信号量是一种睡眠锁。如果有一个任务试图获得一个已被持有的信号量时，信号量会将其推入等待队列，然后让其睡眠。这时处理器获得自由去执行其它代码。当持有信号量的进程将信号量释放后，在等待队列中的一个任务将被唤醒，从而便可以获得这个信号量。
+3.3.3 自旋锁
+
+3.4 Linux编程
+3.4.1 进程间通信
+管道，命名管道，共享内存，Socket，消息队列，信号量
+各种方法的优缺点：
+1）无名管道：简单；但单向，而且只能子孙进程之间使用。
+2）共享内存：共享的内存页面映射到想共享数据的进程的各自虚拟空间中，从而使多个进程可以直接访问同一个物理页面。速度最快，效率最高，局限性在于必须有物理内存共享才可以。需要自己解决读写同步问题。
+3）消息队列：不需要考虑同步问题，但数据被复制多份，信息量大且频繁操作的情况不适合。
+
+
+如何让一个资源五分钟内不被任何线程所占用？
+条件变量：假设有十个线程正在等待被条件为真，当所等待的条件变为真后，哪个线程会被唤醒？
+多线程：假设有1000个任务要做，可以由一个进程顺序处理这1000个任务，也可以创建1000个线程，每个线程处理1个任务。这两种方式在效率上有什么区别？多核会有影响吗？
+
+什么是static type和dynamic type?
+什么是external linkage和internal linkage?
+什么是memory varrier？
+什么是content switch？
+什么是false sharing？
+
+列举出服务器端最常用的模型
+1) 迭代模型: 最原始的模型，服务器在一个循环里等待请求，且每次只能处理一个请求。
+2）基本并发模型，一个进程处理一个请求: 迭代模型的拓展，加强了服务器的处理能力，不过存在着许多不足，最直接的瓶颈就是当请求多的时候，在进程或者线程间的切换是比较耗资源的。
+3）
+四 算法与数据结构
+4.1 列举你所知道的所有字符串匹配算法
+答案：
+1，正常的逐个匹配
+2，KMP，匹配过程中利用之前未匹配的信息。（待学习）
+3，BM算法（待学习）
+4.2 求一个整数二进制中1的个数
+答案：
+解法1，对输入整数n与1与操作，然后对n不断右移，判断每位是否为1。
+while(n){
+	if(n&1)
+                count++;
+           n = n>>1;
+}
+这个思路当输入i是正数时没有问题，但当输入的i是一个负数时，不但不能得到正确的1的个数，还将导致死循环。因为右移是算数移位，右端补齐的是符号位。例如：0x80000000，不断右移后将变为：0xFFFFFFFF，while(n)无法终止。
+备注1：左移操作每次最低位用0补齐，所以任意数左移之后均会变成0。左移时，符号位不保留，负数左移后可变为正数。
+
+解法2，输入整数不变，逐位左移测试数flag。
+while(flag){
+    if(n&flag)
+       count++;
+    n = n<<1;
+}
+
+解法3，分治的思路，计算每相邻2位，4位，8位，16位，32位，64位中1的个数。
+因为计算的时候是并行的，所以之需要6次计算即可得到一个unhit整数中1的个数。
+pop_count1(int64 i){
+ const int m1 = 0x5555555555555555; //binary: 0101...
+	const int m2 = 0x3333333333333333; //binary: 00110011..
+	const int m4 = 0x0f0f0f0f0f0f0f0f; //binary: 4 zeros, 4 ones ...
+	const int m8 = 0x00ff00ff00ff00ff; //binary: 8 zeros, 8 ones ...
+	const int m16 = 0x0000ffff0000ffff; //binary: 16 zeros, 16 ones ...
+
+ 	i = i & m1 + ((i>>1) & m1);
+	i = i & m2 + ((i>>2) & m2);
+i = i & m3 + ((i>>4) & m3);
+i = i & m4 + ((i>>8) & m4);
+i = i & m5 + ((i>>16) & m5);
+i = i & m6 + ((i>>32) & m6);
+}
+备注：这种方法对于i是负数时也同样可以使用。原因是：右移之后虽然可能补齐符号位，但是移位之后&的数（m1,m2,m3,m4,m5,m6的符号位均为0）。
+4.3  排序
+4.3.1 快速排序
+void qsort(int *array, int begin , int end)
+{
+	assert(array);
+if(begin<end){
+		int pivotpos = partition(array,begin,end);
+                        qsort(array,begin,pivotpos-1);
+	            qsort(array,pivotpos+1,end);
+}
+}
+
+int partition( int *array, int begin, int end){
+	int pivot = array[begin];
+            int i = begin;
+            int j = end;
+            while(i<j){
+		while(i<j&&array[j]>=pivot)
+                                  j--;
+                       if(i<j){
+			array[i++] = array[j];
+}
+while(i<j&&array[i]<=pivot)
+          i++;
+if(i<j){
+	array[j--] = array[i];
+}
+}
+array[i] = pivot;
+            return i;
+}
+C++ STL中对于快速排序的一些改进： 
+数量少的时候直接用插入排序
+递归次数多的时候用堆排序
+3点取中值法，防止最坏情况的发生。
+4.3.2 冒泡排序
+void bubbleSort(int [] array, int n)
+{
+	int i,j;
+           bool finish = true; 
+	for(i=0;i<n-1;i++){
+		finish = true;
+		for(j=0;j<n-i-1;j++)
+		{
+			if(array[j]>array[j+1]){
+				swap(&array[j], &array[j+1]);
+		finish = false;
+}
+}
+if(finish==true)
+	break;
+}
+}
+4.3.3 堆排序
+堆的定义： 父节点总是大于等于左右子节点，每个节点的左子树和右子树都是一个二叉堆。
+每个子树的父节点，总是该子树中最大的节点。
+堆排序的方法既是将根节点与堆的最后一个节点交换，交换之后最后一个节点即为最大值，同时对少了一个节点后的n-1个节点进行堆调整，使其重新成为堆，重建堆，如此递归，得到一个有序序列。
+
+堆排序中的三个函数：
+1）堆调整函数(heapAdjust)，以输入节点作为根节点，生成一个最大堆。
+2）堆建立函数(buildHeap)，调用heapAdjust，自树叶子节点至根节点，将一个无序序列变为一个最大堆。
+3) 堆排序(heapSort)，每次将根节点和最后一个节点交换（根节点是当前堆中最大值），然后对堆进行调整。
+
+void heapAdjust(vector<int>& heap, int i, int length)
+{
+	for(int j=2*i;j<=length;j=j*2)
+	{
+		//找到较大的节点
+if(j<length && heap[j+1]>heap[j])
+			j++;
+		if(heap[i]>heap[j])
+			break;
+		swap(heap[i],heap[j]);
+		i = j;
+}
+}
+
+void buildHeap(vector<int>& heap, int length)
+{
+for(int i=heap.size()/2;i>0;i--)
+heapAdjust(heap,i,length);	
+}
+
+void heapSort(vector<int>& heap){
+	buildHeap(heap,heap.size() -1);
+	for(int i=heap.size()-1;i>1;i--){
+		swap(heap[1],heap[i]);
+		heapAdjust(heap,1,i-1);
+}
+}
+
+堆排序改进的一个方向是：减小常数因子。
+
+4.3.4 归并排序
+合并两个有序数组（归并排序的基础）
+vector<int>  merge(vector<int> v1, vector<int> v2)
+{
+	vector<int>::iterator iter1 = v1.begin();
+	vector<int>::iterator iter2 = v2.begin();
+	vector<int> v3;
+	while(iter1!=v1.end()&&iter2!=v2.end())
+		if(*iter1<*iter2)
+v3.push_back(*iter1++);
+else
+	v3.push_back(*iter2++);
+	while(iter1!=v1.end())
+		v3.push_back(*iter1++);
+	while(iter2!=v2.end())
+		v3.push_back(*iter2++);
+	return v3;
+	
+}
+基本思想：
+   前提：合并两个已排序的数组为一个数组的时间复杂度为O(N)。
+   基本思想：对一个数组归并排序过程是：
+1)	不断的递归分治，n-> n/2 ，数组生成两个已排好序的子数组，
+2)	对两个子数组进行归并合并
+   void merge(int a[], int begin, int mid, int end, int temp[])
+   {
+	int i = begin;
+	int j = mid  + 1;
+	int k =0;
+	while(i<=mid&&j<=end)
+	{
+		if(a[i]<a[j])
+			temp[k++] = a[i];
+		else
+			temp[k++] = a[j];
+}
+while(i!=mid)
+	temp[k++] = a[i++];
+while(j!=end)
+	temp[k++] = a[j++];
+for(i=0;i<k;i++)
+{
+	a[begin+i] = temp[i];
+}
+   }
+
+   void _mergeSort(int a[], int begin, int end, int temp[])
+  {
+	if(begin<end)
+	{
+		int mid = begin + ((end - begin)>>2);
+		_mergeSort(a,begin,mid,temp);
+		_mergeSort(a,mid + 1, end, temp);
+		merge(a,begin,mid,end,temp);
+}
+  }
+
+void mergeSort(int a[], int begin)
+{
+	int *temp = new int[length];
+	_mergeSort(a,0,length-1,temp);
+	delete [] temp;
+}
+
+归并排序的另外一种变形，空间复杂度O(1)的归并排序。
+数组al[0,mid-1] 和 al[mid,num-1]，都分别有序。将其merge成有序数组al[0,num-1]。
+void merge(int a[], int begin ,int mid, int end)
+{
+	int i = begin;
+	int j = mid + 1;
+	while(j<=end)
+	{
+		If(a[i]>a[j])
+		{
+			Int tmp = a[j];
+for(int k=j;k>i;k--)
+				a[k] = a[k-1];
+			a[k] = tmp;
+			i++; j++;
+}
+else
+{
+	i++;
+}
+}
+}
+和普通归并排序需要注意的是是，程序的终止条件是j<=end，因为i将不断的右移，很容易大于mid。
+4.3.5 插入排序
+基本思想： 从第二个待排序关键字开始，同左侧已排序队列中的每一个元素进行比较，如果小于左侧元素，则左移每个元素。直到确定好该排序元素的位置。
+void insertSort(int a[], int begin, int end)
+{
+	for(int i=begin+1;i<=end;i++)
+	{
+		int tmp = a[i];
+		int j = i;
+		while(j>begin&&a[j-1]>temp){
+			a[j] = a[j-1];
+			j--;
+}
+		a[j] = tmp;
+}
+}
+4.3.6 排序的一个总结
+ 
+
+快速排序 和 堆排序的差别：
+    快速排序 最坏时间 差于 堆排序
+    快速排序 需要额外的辅助空间，堆排序不需要。
+
+4.4  比较一个二叉树是否相同（左右子树交换也算作相同）
+ 
+
+struct Tree
+{
+	int value;
+	struct Tree* left;
+	struct Tree* right;
+};
+
+bool compareTree(struct Tree* tree1, struct Tree* tree2){
+	if(tree1==NULL&&tree2==NULL)
+               return true;
+	
+	if(tree1==NULL||tree2==NULL)
+               return false;
+          if(tree1->value!=tree2->value)
+              return false;
+	else
+	   return compareTree(tree1->left,tree2->left)&&compareTree(tree1->right,tree2->right)
+   || compareTree(tree1->left,tree2->right)&&compareTree(tree1->right,tree2->left);
+
+}
+4.5　字符串相关操作
+4.5.1  删除一个字符串中的某个字符
+题目要求： delete_char(char * str, char ch); 删除str中所有的ch
+void delete_char(char * str, char ch)
+{
+	if(str==NULL)
+		return;
+	int i = 0, j = 0;
+	while(str[i]!=’\0’){
+		if(str[i]!=ch){
+			str[i++] = str[j++];
+}
+	else
+		j++;
+}
+str[i] = ‘\0’;
+}
+时间复杂度: O(n)，空间复杂度:O(1)
+变种问题：从第一个字符串中删除第二个字符串的全部字符
+输入”They are students.”和”aeiou”，则删除之后的第一个字符串变成：”Thy r stdnts.”
+bool deleteChars(char *str1, char* str2)
+{
+	if(str1==NULL || str2==NULL)
+		return false;
+	char hashMap[256] = {“\0”};
+	int i = 0;
+	int first = 0;
+	int second = 0;
+while(str2[i]!=’\0’){
+hashMap[str2[i]] = 1;
+	i++;
+}
+
+while(str1[second]!=’\0’){
+	if(hashMap[str1[second]]==0){
+		str1[first++]  = str1[second];
+}
+second++;
+}
+	str1[first] = ‘\0’;
+	return true;
+}
+4.5.2  将一个字符串旋转
+例：   输入abcd   输出：dcba
+void reverseString(char *array, int begin, int end)
+{
+	assert(array!=NULL&&end>=begin);
+int middle = begin + ((end - begin)>>2);
+	for(int i=begin;i<=middle;i++)
+		swap(array[i],array[end  -  i + begin]);
+}
+
+扩展1：将一个字符串中的每个单词反转
+例：输入  “Hello world!”   输出：“olleH !dlrow”
+思路，判断出每个单词的begin,end，然后调用上述函数
+void reverseWord(char *array)
+{
+	assert(array);
+	int length = strlen(array);
+	int begin;
+	int end;
+for(int i=0;i<length;i++)
+{
+	if(array[i]!=' ')
+	{
+		begin = i;
+	while(array[i]!=' '&&i<length)
+		i++;
+	end = i -1;
+reverseString(array, begin end);
+} //end if
+}//end for
+}
+
+扩展2：将一个字符串保持每个单词内顺序，但整个反转
+输入：”ab bc cd de”，输出：”de cd bc ab”
+基本思路：整个字符串全部反转，然后再按照单词进行单词反转。
+reverseString(array,0,len-1);
+reverseWord(array);
+
+4.6  20个数组，每个数组50个数均为有序，求出最大的前500个数
+基本思路，利用最小堆。每个数组取前25个元素（默认数组从大向小排列），建成最小堆（根节点最小）。
+然后对于每个数组从第26个元素开始遍历，
+如果第26个元素<根节点，遍历下一个数组。
+如果第26个元素>根节点，将其与堆顶元素交换，堆调整；依次进行下去直到某个元素小于等于根节点。
+
+4.7  二分搜索
+标准二分搜索
+int binarySearch(int a[], int n, int key){
+	if(a==NULL)
+		return -1;
+	int left   = 0;
+	int right = n -1;
+while(left<=right){
+	int middle = left + ((right - left)>>1);    //防止溢出
+	if(a[middle]>key)
+		right = middle -1;
+	else if(a[middle]<key)
+		left = middle + 1;
+	else
+		return middle;
+} 
+return -1; //没找到
+}
+
+二分搜索变形：有序的旋转数组二分搜索
+
+4.7  逆序一个数字
+
+int reverseNumber( int number)
+{
+	int result = 0;
+if(number<0) number = 0-number;
+while(number){
+	result = 10*result + number%10;
+	number = number /10;
+}
+}
+4.9 自己实现atoi 和 atof
+溢出的考虑，最大正整数： 0x7FFFFFFF，最大负整数：0X8000000。
+溢出的判断， if(ret<MAX_INT/radix || ret==MAX_INT&&ret<=MAX_INT%radix)
+补充一些关于整数溢出的问题，当对最大的正整数+1时，其将变为最大的负整数。之后继续执行++操作时，负整数将不断地变大，再变回为最大的正整数，如此循环。
+不用减法实现：f(x) = x -1
+int f(int x)
+{
+int i = 1,j = x;
+for (;i;++i,++j);return j;
+}
+4.10 16进制和10进制之间的互换
+考察点：10进制转成16进制时需要注意处理负数的问题，-12的16进制表示是：FFFFFFF4。
+具体方法：对于一个10进制的负数，先变成补码（确保是一个正数），然后再调用16进制->10进制的程序。
+负数变成补码的方法： number = number + 2^32; 同时要保证number是一个正数，可以用long来保存number。
+
+不考虑负数只考虑正数的情况下的转换：
+string decToHex(int number)
+{
+	char result[9] = {""};
+	int temp;
+while(number)
+{
+	temp = number%16;
+	if(temp<10)
+result[i++] = temp + '0';
+else
+ result[i++] = temp + 'A';
+	number = number/16;
+}
+string str_result = string(array);
+std::reverse(str_result.begin(),str_result.end());
+return str_result;
+}
+4.11 海量数据处理相关的问题
+基本的一些数量概念，
+1亿个字节  需要  1G的内存空间。
+存储所有的8位电话号码所需要的内存空间：8位最多99 999 999 ，需要99m个bit，10几M字节的内存。
+
+
+
+五 设计模式
+5.1 观察者模式
+用于处理“一对多”的情况，一个对象的改变需要同时改变其他对象。例子：天气信息，更新成多种形式（当前天气，统计信息，天气预测）。
+不用观察者模式实现的话，无法做到运行时增加或删除（新的显示模式）。
+通过使用观察者模式，可以动态的增加（删除）新的显示模式。
+
+ 
+观察者模式，一共3个接口，Subject，Observer，DisplayElement。
+Subject抽象通知者，负责维护Observer的队列，从而实现动态增加（删除）观察者对象。
+Observer抽象观察者，得到通知时更新自己，包含 update方法。
+DisplayElement负责动作的具体内容。
+
+
+5.2 工厂模式
+工厂模式是一种经常被使用到的模式，创建对象用的。根据工厂模式实现的类可以根据提供的数据生成一组类中某一个类的实例，通常这一组类有一个公共的抽象父类并且实现了相同的方法，但是这些方法针对不同的数据进行了不同的操作。
+5.3 单例模式
+保证类仅有一个实例，并提供一个访问他的全局访问点。
+实现时注意双重锁定。
+
+5.4 策略模式
+策略模式是一种定义一系列算法的方法，从概念上来看，所有这些算法完成的都是相同的工作，只是实现不同，它可以以相同的方式调用所有的算法，减少了各种算法类与使用算法类之间的耦合。
+
+
+
+
+
+
+
+
+
+六 网络知识
+1，为什么TCP建立连接需要3次握手，关闭连接需要4次握手
+答案：证明TCP建立连接2次不够用，4次多余。
+例如：
+
+2，IPv6和IPv4的区别
+地址变长，32->128
+报头格式的简化，通过可选项
+增加QOS功能
+IPv4的报头长度不固定，IPv6报头长度固定。
+3， TCP 协议中拥塞避免的机制
+甚至让画出其中拥塞窗口变化曲线，还好这个还比较熟。这个问题多次在面试中都被问到，凡是需要考察网络,TCP/IP 的地方，光知道TCP 的三次握手是不够的，建议大家以”TCP,流量控制，拥塞避免”等为关键字google 一下，最好再加个”filetype:ppt ”，这样，对TCP 协议可以有一个初步的了解。
+4，Apache 和 Tomcat的区别
+
+七，Web编程
+1，Get和Post的区别
+
+
+八，数据库
+八 智力问答
+7.1  100盏灯，第一轮操作：全部亮灯；第二轮，隔一个灭一个灯，即第偶数盏等灭掉；第三轮：隔两盏灯，如果是亮着的，灭掉，如果没亮，则打开；以此类推，进行到第100轮操作的时候，有多少盏灯是亮着的？
+分析：灯编号所含有的子因数的个数。
+例如： 1 ：只含有一个子因数：1，所以会亮。
+          2 ：含有2个子因素：1,2，会灭。
+因为子因数成对出现，所以含有偶数个子因数的灯将灭，含有奇数个子因数的灯会亮。
+只有完全平方数才会含有奇数个子因数。
+
+九、NLP相关问答
+
+隐马尔科夫模型
+贝叶斯
+倒排索引
+编辑距离
+K-means
+
+
+百度面试题 一面：
+（1）写一个函数，输入一个字符串，将头尾的空格斗去掉，卡了一下，尽量要少的赋值操作才好。 对此函数做测试，设计测试用例。
+（2）语言方面，static，sizeof（），继承。 
+（3）列举排序方法。
+（4）socket，客户端和服务器端函数名。
+（5）进程，线程。 具体的互斥机制。
+（6）自己做的项目（实现环境，架构，功能，你做的，遇到什么问题，如何解决） 二面：
+（1）有100G大小的一个文件，内部是很多数据包。
+格式 
+pack_id XXXX;
+pack_name YYYY;
+
+
+…. 按pack_id排序。 （尽量少的磁盘访问）
+（2）然后就不是技术了。有团队合作，个人职业生涯规划什么的。最后一个问题是有没有女朋友。 
+列一张我准备的表 （1）正则表达式
+（2）socket
+（3）多线程，进程。
+（4）static，extern
+（5）const
+（6）ifndef
+(7)time_wait
+(8)tcp/ip
+(9)linux基本命令
+（10）继承，多态
+（11）sql『包括index等等』
+（12）随机数
+（13）文件操作
+（14）堆 （15）排序***列举，时间复杂度，稳定排序，具体代码（快排），拓扑。
+（16）链表***单链表插入删除等等，单链表判断有环。 
+（17）字符串***拷贝，数字转字符串或反之。
+（18）没有（凑个吉利数字条数）。 如果面开发最好准备数据结构和算法的知识，加分！！！当然面测试的话测试知识是必须的，函数测试，电梯，ATM取款机，自动售货机测试。
+
+http://www.stanford.edu/class/cs246/info.html
+
+
